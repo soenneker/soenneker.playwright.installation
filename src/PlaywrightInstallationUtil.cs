@@ -25,7 +25,7 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 
             try
             {
-                DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("ASPNETCORE_ENVIRONMENT"));
+                DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("Environment"));
 
                 string binDirectory = AppContext.BaseDirectory;
 
