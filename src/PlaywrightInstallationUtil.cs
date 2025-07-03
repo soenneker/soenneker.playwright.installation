@@ -9,6 +9,7 @@ using Soenneker.Enums.DeployEnvironment;
 using Soenneker.Extensions.Configuration;
 using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.Process.Abstract;
+using Soenneker.Extensions.String;
 
 namespace Soenneker.Playwright.Installation;
 
@@ -27,11 +28,12 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
             {
                 DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("Environment"));
 
-                string baseDir = AppContext.BaseDirectory;
-                string browserPath = GetDefaultPlaywrightPath();
+                string browserPath = GetPlaywrightPath();
 
                 if (environment == DeployEnvironment.Local)
                 {
+                    string baseDir = AppContext.BaseDirectory;
+
                     logger.LogDebug("🧪 Local environment detected. Using PowerShell script for Playwright installation.");
 
                     string scriptPath = Path.Combine(baseDir, "playwright.ps1");
@@ -57,14 +59,24 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
         });
     }
 
-    private static string GetDefaultPlaywrightPath()
+    private static string GetPlaywrightPath()
     {
-        string appRoot = AppContext.BaseDirectory;
+        // 1️⃣  Respect an explicit override
+        string? env = Environment.GetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH");
 
-        if (appRoot.Contains("/home/site/wwwroot", StringComparison.OrdinalIgnoreCase))
-            return Path.Combine("/home/site/wwwroot", ".playwright");
+        if (env.HasContent())
+            return env;
 
-        return Path.Combine(appRoot, ".playwright");
+        // 2️⃣  Custom container on Azure App Service
+        if (Directory.Exists("/wwwroot"))
+            return "/wwwroot/.playwright";          // same place as /home/site/wwwroot
+
+        // 3️⃣  Built-in Linux Web App (no custom container)
+        if (Directory.Exists("/home/site/wwwroot"))
+            return "/home/site/wwwroot/.playwright";
+
+        // 4️⃣  Local dev or any other container
+        return Path.Combine(AppContext.BaseDirectory, ".playwright");
     }
 
     public ValueTask EnsureInstalled(CancellationToken cancellationToken = default)
