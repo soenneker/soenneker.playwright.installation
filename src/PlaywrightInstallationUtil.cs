@@ -27,23 +27,22 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
             {
                 DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("Environment"));
 
-                string binDirectory = AppContext.BaseDirectory;
+                string baseDir = AppContext.BaseDirectory;
+                string browserPath = GetDefaultPlaywrightPath();
 
                 if (environment == DeployEnvironment.Local)
                 {
-                    logger.LogDebug("Local environment detected, using PowerShell script for installation of Playwright.");
+                    logger.LogDebug("🧪 Local environment detected. Using PowerShell script for Playwright installation.");
 
-                    string scriptPath = Path.Combine(binDirectory, "playwright.ps1");
-                    await processUtil.Start("powershell", binDirectory, $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" install chromium",
+                    string scriptPath = Path.Combine(baseDir, "playwright.ps1");
+
+                    await processUtil.Start("powershell", baseDir, $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" install chromium",
                         cancellationToken: token);
                 }
                 else
                 {
-                    string browserPath = Path.Combine(binDirectory, ".playwright");
-
-                    logger.LogInformation("Setting PLAYWRIGHT_BROWSERS_PATH ({path})...", browserPath);
-
                     Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browserPath);
+                    logger.LogInformation("🌐 Set PLAYWRIGHT_BROWSERS_PATH to: {Path}", browserPath);
                 }
 
                 logger.LogInformation("✅ Playwright Chromium installation confirmed.");
@@ -54,8 +53,18 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
                 throw;
             }
 
-            return new object(); // Required for AsyncSingleton<T>
+            return new object();
         });
+    }
+
+    private static string GetDefaultPlaywrightPath()
+    {
+        string appRoot = AppContext.BaseDirectory;
+
+        if (appRoot.Contains("/home/site/wwwroot", StringComparison.OrdinalIgnoreCase))
+            return Path.Combine("/home/site/wwwroot", ".playwright");
+
+        return Path.Combine(appRoot, ".playwright");
     }
 
     public ValueTask EnsureInstalled(CancellationToken cancellationToken = default)
