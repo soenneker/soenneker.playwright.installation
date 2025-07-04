@@ -16,10 +16,12 @@ namespace Soenneker.Playwright.Installation;
 /// <inheritdoc cref="IPlaywrightInstallationUtil"/>
 public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 {
+    private readonly ILogger<PlaywrightInstallationUtil> _logger;
     private readonly AsyncSingleton _installer;
 
     public PlaywrightInstallationUtil(ILogger<PlaywrightInstallationUtil> logger, IProcessUtil processUtil, IConfiguration configuration)
     {
+        _logger = logger;
         _installer = new AsyncSingleton(async (token, _) =>
         {
             logger.LogDebug("⏳ Ensuring Playwright Chromium is installed...");
@@ -59,24 +61,49 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
         });
     }
 
-    private static string GetPlaywrightPath()
+    private string GetPlaywrightPath()
     {
-        // 1️⃣  Respect an explicit override
-        string? env = Environment.GetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH");
+        const string cacheFolder = ".playwright";
+        const string customRoot = "/wwwroot";
+        const string builtInRoot = "/home/site/wwwroot";
+        const string envVar = "PLAYWRIGHT_BROWSERS_PATH";
 
-        if (env.HasContent())
-            return env;
+        _logger.LogDebug("Resolving Playwright browser path…");
 
-        // 2️⃣  Custom container on Azure App Service
-        if (Directory.Exists("/wwwroot"))
-            return "/wwwroot/.playwright";          // same place as /home/site/wwwroot
+        // 1️⃣ explicit override
+        string? envPath = Environment.GetEnvironmentVariable(envVar);
+        _logger.LogDebug("{EnvVar} = \"{Value}\"", envVar, envPath ?? "<null>");
 
-        // 3️⃣  Built-in Linux Web App (no custom container)
-        if (Directory.Exists("/home/site/wwwroot"))
-            return "/home/site/wwwroot/.playwright";
+        if (!string.IsNullOrWhiteSpace(envPath))
+        {
+            _logger.LogInformation("Using override from {EnvVar}: {Path}", envVar, envPath);
+            return envPath!;
+        }
 
-        // 4️⃣  Local dev or any other container
-        return Path.Combine(AppContext.BaseDirectory, ".playwright");
+        // 2️⃣ custom container on Azure App Service
+        if (Directory.Exists(customRoot))
+        {
+            string path = Path.Combine(customRoot, cacheFolder);
+            _logger.LogInformation("Detected custom-container root ({Root}). Using {Path}", customRoot, path);
+            return path;
+        }
+
+        _logger.LogDebug("{Root} not found; skipping custom-container path.", customRoot);
+
+        // 3️⃣ built-in Linux Web App
+        if (Directory.Exists(builtInRoot))
+        {
+            string path = Path.Combine(builtInRoot, cacheFolder);
+            _logger.LogInformation("Detected built-in root ({Root}). Using {Path}", builtInRoot, path);
+            return path;
+        }
+
+        _logger.LogDebug("{Root} not found; skipping built-in path.", builtInRoot);
+
+        // 4️⃣ fallback – local dev / any other container
+        string fallback = Path.Combine(AppContext.BaseDirectory, cacheFolder);
+        _logger.LogInformation("Falling back to app base directory: {Path}", fallback);
+        return fallback;
     }
 
     public ValueTask EnsureInstalled(CancellationToken cancellationToken = default)
