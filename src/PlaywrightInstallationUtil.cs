@@ -30,7 +30,7 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
             {
               //  DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("Environment"));
 
-                int code = Program.Main(["install", "chromium", "--with-deps"]);
+                int code = Program.Main(["install", "--with-deps", "chromium"]);
 
                 //string browserPath = await GetPlaywrightPath(token).NoSync();
 
