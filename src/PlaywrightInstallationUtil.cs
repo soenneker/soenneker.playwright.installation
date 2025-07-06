@@ -8,6 +8,7 @@ using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.Runtime;
 using Microsoft.Playwright;
 using Soenneker.Utils.Directory.Abstract;
+using Microsoft.Extensions.Configuration;
 
 namespace Soenneker.Playwright.Installation;
 
@@ -17,24 +18,37 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
     private readonly ILogger<PlaywrightInstallationUtil> _logger;
     private readonly AsyncSingleton _installer;
 
-    public PlaywrightInstallationUtil(ILogger<PlaywrightInstallationUtil> logger, IDirectoryUtil directoryUtil)
+    public PlaywrightInstallationUtil(ILogger<PlaywrightInstallationUtil> logger, IDirectoryUtil directoryUtil, IConfiguration configuration)
     {
         _logger = logger;
         _installer = new AsyncSingleton(() =>
         {
             logger.LogDebug("⏳ Ensuring Playwright Chromium is installed...");
 
+            string playwrightPath = GetPlaywrightPath();
+
+            directoryUtil.CreateIfDoesNotExist(playwrightPath);
+
+            _logger.LogInformation("Setting PLAYWRIGHT_BROWSERS_PATH to {PlaywrightPath}", playwrightPath);
+
+            Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", playwrightPath);
+
+            bool noShell = configuration.GetValue("Playwright:NoShell", true);
+
             try
             {
-                string playwrightPath = GetPlaywrightPath();
+                string[] args;
 
-                directoryUtil.CreateIfDoesNotExist(playwrightPath);
+                if (noShell)
+                {
+                    args = ["install", "--with-deps", "--no-shell", "chromium"];
+                }
+                else
+                {
+                    args = ["install", "--with-deps", "chromium"];
+                }
 
-                _logger.LogInformation("Setting PLAYWRIGHT_BROWSERS_PATH to {PlaywrightPath}", playwrightPath);
-
-                Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", playwrightPath);
-
-                int code = Program.Main(["install", "--with-deps", "--no-shell", "chromium"]);
+                int code = Program.Main(args);
 
                 if (code != 0)
                     throw new Exception($"Playwright CLI exited with {code}");
