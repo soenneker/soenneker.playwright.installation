@@ -9,5 +9,7 @@ namespace Soenneker.Playwright.Installation.Abstract;
 /// </summary>
 public interface IPlaywrightInstallationUtil : IDisposable, IAsyncDisposable
 {
+    string GetPlaywrightPath();
+
     ValueTask EnsureInstalled(CancellationToken cancellationToken = default);
 }

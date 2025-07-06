@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Soenneker.Playwright.Installation.Abstract;
-using Soenneker.Utils.Process.Registrars;
+using Soenneker.Utils.Directory.Registrars;
 
 namespace Soenneker.Playwright.Installation.Registrars;
 
@@ -15,7 +15,7 @@ public static class PlaywrightInstallationUtilRegistrar
     /// </summary>
     public static IServiceCollection AddPlaywrightInstallationUtilAsSingleton(this IServiceCollection services)
     {
-        services.AddProcessUtilAsSingleton().TryAddSingleton<IPlaywrightInstallationUtil, PlaywrightInstallationUtil>();
+        services.AddDirectoryUtilAsSingleton().TryAddSingleton<IPlaywrightInstallationUtil, PlaywrightInstallationUtil>();
 
         return services;
     }
@@ -25,7 +25,7 @@ public static class PlaywrightInstallationUtilRegistrar
     /// </summary>
     public static IServiceCollection AddPlaywrightInstallationUtilAsScoped(this IServiceCollection services)
     {
-        services.AddProcessUtilAsScoped().TryAddScoped<IPlaywrightInstallationUtil, PlaywrightInstallationUtil>();
+        services.AddDirectoryUtilAsScoped().TryAddScoped<IPlaywrightInstallationUtil, PlaywrightInstallationUtil>();
 
         return services;
     }
