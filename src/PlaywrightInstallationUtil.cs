@@ -5,13 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Soenneker.Enums.DeployEnvironment;
-using Soenneker.Extensions.Configuration;
 using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.Process.Abstract;
 using Soenneker.Extensions.String;
 using Soenneker.Utils.Runtime;
-using Soenneker.Extensions.ValueTask;
+using Microsoft.Playwright;
 
 namespace Soenneker.Playwright.Installation;
 
@@ -30,26 +28,31 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 
             try
             {
-                DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("Environment"));
+              //  DeployEnvironment? environment = DeployEnvironment.FromName(configuration.GetValueStrict<string>("Environment"));
 
-                string browserPath = await GetPlaywrightPath(token).NoSync();
+                int code = Program.Main(["install", "chromium", "--with-deps"]);
 
-                if (environment == DeployEnvironment.Local || environment == DeployEnvironment.Test)
-                {
-                    string baseDir = AppContext.BaseDirectory;
+                //string browserPath = await GetPlaywrightPath(token).NoSync();
 
-                    logger.LogDebug("🧪 Local environment detected. Using PowerShell script for Playwright installation.");
+                //if (environment == DeployEnvironment.Local || environment == DeployEnvironment.Test)
+                //{
+                //    string baseDir = AppContext.BaseDirectory;
 
-                    string scriptPath = Path.Combine(baseDir, "playwright.ps1");
+                //    logger.LogDebug("🧪 Local environment detected. Using PowerShell script for Playwright installation.");
 
-                    await processUtil.Start("powershell", baseDir, $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" install chromium",
-                        cancellationToken: token).NoSync();
-                }
-                else
-                {
-                    Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browserPath);
-                    logger.LogInformation("🌐 Set PLAYWRIGHT_BROWSERS_PATH to: {Path}", browserPath);
-                }
+                //    string scriptPath = Path.Combine(baseDir, "playwright.ps1");
+
+                //    await processUtil.Start("powershell", baseDir, $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" install chromium",
+                //        cancellationToken: token).NoSync();
+                //}
+                //else
+                //{
+                //    Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browserPath);
+                //    logger.LogInformation("🌐 Set PLAYWRIGHT_BROWSERS_PATH to: {Path}", browserPath);
+                //}
+
+                if (code != 0)
+                    throw new Exception($"Playwright CLI exited with {code}");
 
                 logger.LogInformation("✅ Playwright Chromium installation confirmed.");
             }
