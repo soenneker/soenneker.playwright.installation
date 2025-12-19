@@ -4,11 +4,11 @@ using Soenneker.Playwright.Installation.Abstract;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.Runtime;
 using Microsoft.Playwright;
 using Soenneker.Utils.Directory.Abstract;
 using Microsoft.Extensions.Configuration;
+using Soenneker.Utils.AsyncInitializers;
 
 namespace Soenneker.Playwright.Installation;
 
@@ -16,12 +16,12 @@ namespace Soenneker.Playwright.Installation;
 public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 {
     private readonly ILogger<PlaywrightInstallationUtil> _logger;
-    private readonly AsyncSingleton _installer;
+    private readonly AsyncInitializer _installer;
 
     public PlaywrightInstallationUtil(ILogger<PlaywrightInstallationUtil> logger, IDirectoryUtil directoryUtil, IConfiguration configuration)
     {
         _logger = logger;
-        _installer = new AsyncSingleton(() =>
+        _installer = new AsyncInitializer(() =>
         {
             logger.LogDebug("⏳ Ensuring Playwright Chromium is installed...");
 
@@ -60,8 +60,6 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
                 logger.LogError(ex, "❌ Failed to install Playwright Chromium.");
                 throw;
             }
-
-            return new object();
         });
     }
 
