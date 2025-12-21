@@ -8,7 +8,7 @@ using Soenneker.Utils.Runtime;
 using Microsoft.Playwright;
 using Soenneker.Utils.Directory.Abstract;
 using Microsoft.Extensions.Configuration;
-using Soenneker.Utils.AsyncInitializers;
+using Soenneker.Asyncs.Initializers;
 
 namespace Soenneker.Playwright.Installation;
 
