@@ -9,6 +9,7 @@ using Microsoft.Playwright;
 using Soenneker.Utils.Directory.Abstract;
 using Microsoft.Extensions.Configuration;
 using Soenneker.Asyncs.Initializers;
+using Soenneker.Extensions.ValueTask;
 
 namespace Soenneker.Playwright.Installation;
 
@@ -21,13 +22,13 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
     public PlaywrightInstallationUtil(ILogger<PlaywrightInstallationUtil> logger, IDirectoryUtil directoryUtil, IConfiguration configuration)
     {
         _logger = logger;
-        _installer = new AsyncInitializer(() =>
+        _installer = new AsyncInitializer(async (cancellationToken) =>
         {
             logger.LogDebug("⏳ Ensuring Playwright Chromium is installed...");
 
             string playwrightPath = GetPlaywrightPath();
 
-            directoryUtil.CreateIfDoesNotExist(playwrightPath, false);
+            await directoryUtil.CreateIfDoesNotExist(playwrightPath, false, cancellationToken).NoSync();
 
             _logger.LogInformation("Setting PLAYWRIGHT_BROWSERS_PATH to {PlaywrightPath}", playwrightPath);
 
