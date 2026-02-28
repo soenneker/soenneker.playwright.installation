@@ -28,7 +28,7 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 
             string playwrightPath = GetPlaywrightPath();
 
-            await directoryUtil.CreateIfDoesNotExist(playwrightPath, false, cancellationToken).NoSync();
+            await directoryUtil.Create(playwrightPath, false, cancellationToken).NoSync();
 
             _logger.LogInformation("Setting PLAYWRIGHT_BROWSERS_PATH to {PlaywrightPath}", playwrightPath);
 
