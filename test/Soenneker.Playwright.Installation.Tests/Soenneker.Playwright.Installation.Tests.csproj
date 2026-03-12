@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Soenneker.Playwright.Installation.csproj" />
+        <ProjectReference Include="..\..\src\Soenneker.Playwright.Installation\Soenneker.Playwright.Installation.csproj" />
     </ItemGroup>
 
     <ItemGroup>
