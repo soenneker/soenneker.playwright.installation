@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Soenneker.Playwright.Installation.Abstract;
 using Soenneker.Utils.Directory.Registrars;
@@ -11,7 +11,7 @@ namespace Soenneker.Playwright.Installation.Registrars;
 public static class PlaywrightInstallationUtilRegistrar
 {
     /// <summary>
-    /// Adds <see cref="IPlaywrightInstallationUtil"/> as a singleton service. <para/>
+    /// Adds <see cref="IPlaywrightInstallationUtil"/> as a singleton.
     /// </summary>
     public static IServiceCollection AddPlaywrightInstallationUtilAsSingleton(this IServiceCollection services)
     {
@@ -21,7 +21,7 @@ public static class PlaywrightInstallationUtilRegistrar
     }
 
     /// <summary>
-    /// Adds <see cref="IPlaywrightInstallationUtil"/> as a scoped service. <para/>
+    /// Adds <see cref="IPlaywrightInstallationUtil"/> as a scoped service.
     /// </summary>
     public static IServiceCollection AddPlaywrightInstallationUtilAsScoped(this IServiceCollection services)
     {

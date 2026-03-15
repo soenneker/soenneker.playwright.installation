@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using Soenneker.Playwright.Installation.Abstract;
 using System.Threading;
@@ -10,6 +11,7 @@ using Soenneker.Utils.Directory.Abstract;
 using Microsoft.Extensions.Configuration;
 using Soenneker.Asyncs.Initializers;
 using Soenneker.Extensions.ValueTask;
+using Soenneker.Playwright.Installation.Options;
 
 namespace Soenneker.Playwright.Installation;
 
@@ -18,15 +20,19 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 {
     private readonly ILogger<PlaywrightInstallationUtil> _logger;
     private readonly AsyncInitializer _installer;
+    private PlaywrightInstallationOptions? _options;
 
     public PlaywrightInstallationUtil(ILogger<PlaywrightInstallationUtil> logger, IDirectoryUtil directoryUtil, IConfiguration configuration)
     {
         _logger = logger;
-        _installer = new AsyncInitializer(async (cancellationToken) =>
-        {
-            logger.LogDebug("⏳ Ensuring Playwright Chromium is installed...");
 
-            string playwrightPath = GetPlaywrightPath();
+        _installer = new AsyncInitializer(async cancellationToken =>
+        {
+            PlaywrightInstallationOptions options = _options ?? GetOptions(configuration);
+
+            logger.LogDebug("⏳ Ensuring Playwright {Browser} is installed...", options.Browser);
+
+            string playwrightPath = options.BrowsersPath ?? GetPlaywrightPath();
 
             await directoryUtil.Create(playwrightPath, false, cancellationToken).NoSync();
 
@@ -34,34 +40,50 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
 
             Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", playwrightPath);
 
-            bool noShell = configuration.GetValue("Playwright:NoShell", true);
-
             try
             {
-                string[] args;
-
-                if (noShell)
-                {
-                    args = ["install", "--with-deps", "--no-shell", "chromium"];
-                }
-                else
-                {
-                    args = ["install", "--with-deps", "chromium"];
-                }
+                string[] args = BuildInstallArgs(options);
 
                 int code = Program.Main(args);
 
                 if (code != 0)
                     throw new Exception($"Playwright CLI exited with {code}");
 
-                logger.LogInformation("✅ Playwright Chromium installation confirmed.");
+                logger.LogInformation("✅ Playwright {Browser} installation confirmed.", options.Browser);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "❌ Failed to install Playwright Chromium.");
+                logger.LogError(ex, "❌ Failed to install Playwright {Browser}.", options.Browser);
                 throw;
             }
         });
+    }
+
+    public void SetOptions(PlaywrightInstallationOptions options)
+    {
+        _options = options;
+    }
+
+    private static PlaywrightInstallationOptions GetOptions(IConfiguration configuration)
+    {
+        var options = new PlaywrightInstallationOptions();
+        configuration.GetSection("Playwright").Bind(options);
+        return options;
+    }
+
+    private static string[] BuildInstallArgs(PlaywrightInstallationOptions options)
+    {
+        var args = new List<string> { "install" };
+
+        if (options.WithDeps)
+            args.Add("--with-deps");
+
+        if (options.NoShell)
+            args.Add("--no-shell");
+
+        args.Add(options.Browser);
+
+        return [.. args];
     }
 
     public string GetPlaywrightPath()

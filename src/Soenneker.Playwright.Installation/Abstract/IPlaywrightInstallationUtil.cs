@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Soenneker.Playwright.Installation.Options;
 
 namespace Soenneker.Playwright.Installation.Abstract;
 
@@ -10,6 +12,11 @@ namespace Soenneker.Playwright.Installation.Abstract;
 public interface IPlaywrightInstallationUtil : IDisposable, IAsyncDisposable
 {
     string GetPlaywrightPath();
+
+    /// <summary>
+    /// Sets options for installation. Call before <see cref="EnsureInstalled"/>; has no effect after the first install.
+    /// </summary>
+    void SetOptions(PlaywrightInstallationOptions options);
 
     ValueTask EnsureInstalled(CancellationToken cancellationToken = default);
 }
