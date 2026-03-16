@@ -30,7 +30,7 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
         {
             PlaywrightInstallationOptions options = _options ?? GetOptions(configuration);
 
-            logger.LogDebug("⏳ Ensuring Playwright {Browser} is installed...", options.Browser);
+            logger.LogDebug("Ensuring Playwright {Browser} is installed...", options.Browser);
 
             string playwrightPath = options.BrowsersPath ?? GetPlaywrightPath();
 
@@ -49,11 +49,11 @@ public sealed class PlaywrightInstallationUtil : IPlaywrightInstallationUtil
                 if (code != 0)
                     throw new Exception($"Playwright CLI exited with {code}");
 
-                logger.LogInformation("✅ Playwright {Browser} installation confirmed.", options.Browser);
+                logger.LogInformation("Playwright {Browser} installation confirmed.", options.Browser);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "❌ Failed to install Playwright {Browser}.", options.Browser);
+                logger.LogError(ex, "Failed to install Playwright {Browser}.", options.Browser);
                 throw;
             }
         });
